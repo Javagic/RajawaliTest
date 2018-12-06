@@ -29,12 +29,6 @@ class TexturePack(val id: Int, picturePack: PicturePack) {
         textureRightInner.filterType = ATexture.FilterType.NEAREST
         textureLeftOuter.filterType = ATexture.FilterType.NEAREST
         textureRightOuter.filterType = ATexture.FilterType.NEAREST
-        TextureManager.getInstance().apply {
-            addTexture(textureLeftInner)
-            addTexture(textureRightInner)
-            addTexture(textureLeftOuter)
-            addTexture(textureRightOuter)
-        }
     }
 }
 

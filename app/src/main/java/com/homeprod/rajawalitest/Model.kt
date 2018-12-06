@@ -7,35 +7,44 @@
 
 package com.homeprod.rajawalitest
 
+import android.graphics.Bitmap
+import io.reactivex.Observable
 import org.rajawali3d.Object3D
 import org.rajawali3d.materials.Material
-import org.rajawali3d.materials.MaterialManager
+import org.rajawali3d.materials.textures.Texture
 import org.rajawali3d.materials.textures.TextureManager
 import org.rajawali3d.math.vector.Vector3
 
+
 const val INNATE_DEVIATION_Y = 4.5
 
-class Model(val position: Int) {
+class Model(obj: Object3D, val position: Int) {
     var isShown: Boolean = false
-    lateinit var innerSurface: Object3D
-    lateinit var outerSurface: Object3D
+    var innerSurface: Object3D
+    var outerSurface: Object3D
+    private var textureLeftInner: Texture
+    private var textureRightInner: Texture
+    private var textureLeftOuter: Texture
+    private var textureRightOuter: Texture
+    private var materialLeftInner: Material
+    private var materialRightInner: Material
+    private var materialLeftOuter: Material
+    private var materialRightOuter: Material
 
     init {
         val texturePack = TexturePack(position, EMPTY_PICTURE_PACK)
-        TextureManager.getInstance().apply {
-            addTexture(texturePack.textureLeftInner)
-            addTexture(texturePack.textureRightInner)
-            addTexture(texturePack.textureLeftOuter)
-            addTexture(texturePack.textureRightOuter)
-        }
+        textureLeftInner = texturePack.textureLeftInner
+        textureRightInner = texturePack.textureRightInner
+        textureLeftOuter = texturePack.textureLeftOuter
+        textureRightOuter = texturePack.textureRightOuter
+        innerSurface = obj.clone(false, true)
+        outerSurface = obj.clone(false, true)
         val materialPack = MaterialPack(position, texturePack)
         setMaterialPack(materialPack)
-        MaterialManager.getInstance()?.apply {
-            addMaterial(materialPack.materialLeftInner)
-            addMaterial(materialPack.materialRightInner)
-            addMaterial(materialPack.materialLeftOuter)
-            addMaterial(materialPack.materialRightOuter)
-        }
+        materialLeftInner = materialPack.materialLeftInner
+        materialRightInner = materialPack.materialRightInner
+        materialLeftOuter = materialPack.materialLeftOuter
+        materialRightOuter = materialPack.materialRightOuter
     }
 
     fun build(x: Double, y: Double) {
@@ -56,13 +65,20 @@ class Model(val position: Int) {
         outerSurface.rotateAround(vector3, -angle * deltaTime)
     }
 
-    fun setTexturePack(texturePack: TexturePack) {
-        TextureManager.getInstance().apply {
-            replaceTexture(texturePack.textureLeftInner)
-            replaceTexture(texturePack.textureRightInner)
-            replaceTexture(texturePack.textureLeftOuter)
-            replaceTexture(texturePack.textureRightOuter)
-        }
+    fun setPicturePack(picturePack: PicturePack) {
+        textureLeftInner = setTex(materialLeftInner, textureLeftInner, picturePack.textureLeftInner)
+        textureRightInner = setTex(materialRightInner, textureRightInner, picturePack.textureRightInner)
+        textureLeftOuter = setTex(materialLeftOuter, textureLeftOuter, picturePack.textureLeftOuter)
+        textureRightOuter = setTex(materialRightOuter, textureRightOuter, picturePack.textureRightOuter)
+    }
+
+    private fun setTex(mat: Material, tex: Texture, pic: Bitmap): Texture {
+        mat.removeTexture(tex)
+        Observable.fromCallable { TextureManager.getInstance().removeTexture(tex) }.subscribe()
+        tex.bitmap = pic
+        val newTex = Texture(tex)
+        mat.addTexture(newTex)
+        return newTex
     }
 
     fun setMaterialPack(materialPack: MaterialPack) {
@@ -70,9 +86,10 @@ class Model(val position: Int) {
         setMaterial(innerSurface, materialPack.materialLeftInner, materialPack.materialRightInner)
     }
 
-    private fun setMaterial(obj: Object3D, textureLeft: Material, textureRight: Material) {
-        setMaterial(obj, textureLeft, true)
-        setMaterial(obj, textureRight, false)
+    private fun setMaterial(obj: Object3D, materialLeft: Material, materialRight: Material) {
+        setMaterial(obj, materialLeft, true)
+        setMaterial(obj, materialRight, false)
+        obj.material = materialRight
     }
 
     private fun setMaterial(obj: Object3D, material: Material, isLeftPartsOfModel: Boolean) {
@@ -82,6 +99,5 @@ class Model(val position: Int) {
                 obj.getChildAt(i).material = material
             }
         }
-        obj.material = material
     }
 }
