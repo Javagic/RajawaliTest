@@ -10,13 +10,17 @@ package com.homeprod.rajawalitest
 import android.content.Context
 import android.view.MotionEvent
 import org.rajawali3d.loader.LoaderOBJ
+import org.rajawali3d.materials.Material
+import org.rajawali3d.materials.textures.ATexture.TextureException
+import org.rajawali3d.materials.textures.Texture
 import org.rajawali3d.materials.textures.TextureManager
+import org.rajawali3d.primitives.ScreenQuad
 import org.rajawali3d.renderer.Renderer
+
 
 const val MODEL_DISTANCE_X = 4.0
 const val MODEL_LOW_DISTANCE_Y = -8.0
 const val MODEL_HIGH_DISTANCE_Y = 8.0
-const val MAIN_BACKGROUND_COLOR = 0x2a9955
 
 class ModelRenderer(context: Context, private val action: () -> Unit) : Renderer(context, true) {
 
@@ -26,8 +30,8 @@ class ModelRenderer(context: Context, private val action: () -> Unit) : Renderer
                 it.render(deltaTime)
             }
         }
-
     }
+
     private val models by lazy {
         listOf(
             createModel(0, -MODEL_DISTANCE_X, MODEL_HIGH_DISTANCE_Y).apply { add() },
@@ -67,8 +71,19 @@ class ModelRenderer(context: Context, private val action: () -> Unit) : Renderer
 
     override fun initScene() {
         action()
-        currentScene.backgroundColor = MAIN_BACKGROUND_COLOR
         currentCamera.z = 40.0
+        val mPlane1 = ScreenQuad(20, 20)
+        val material1 = Material()
+        try {
+            material1.addTexture(Texture("cloud2", R.drawable.background))
+        } catch (e: TextureException) {
+            e.printStackTrace()
+        }
+        material1.colorInfluence = 0f
+        mPlane1.material = material1
+        mPlane1.setPosition(0.0, 0.0, -100.0)
+        currentScene.addChild(mPlane1)
+        currentScene.addChild(mPlane1)
     }
 
     override fun onOffsetsChanged(
@@ -91,7 +106,13 @@ class ModelRenderer(context: Context, private val action: () -> Unit) : Renderer
     private fun Model.add(): Unit = if (isShown) {
     } else {
         currentScene.addChild(innerSurface)
-        currentScene.addChild(outerSurface)
+        currentScene.addChild(outerSurface)//TODO откалибровать
+        outerSurface.getChildAt(2).y -= 0.5//head
+        outerSurface.getChildAt(1).y -= 0.3//Body
+        outerSurface.getChildAt(3).y -= 0.3//LArm
+        outerSurface.getChildAt(4).y -= 0.3//RARm
+        outerSurface.getChildAt(5).y -= 0.2//RLeg
+        outerSurface.getChildAt(0).y -= 0.2//LLeg
         isShown = true
     }
 
